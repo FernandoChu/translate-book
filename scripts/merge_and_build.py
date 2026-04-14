@@ -693,8 +693,61 @@ def add_toc(temp_dir):
 # Step 7: Generate DOCX/EPUB/PDF with error transparency
 # =============================================================================
 
+def generate_format_direct_calibre(html_file, output_file, output_ext, lang_attr):
+    """Fallback: call ebook-convert directly with TOC/chapter options."""
+    try:
+        calibre_path = shutil.which("ebook-convert")
+        if not calibre_path:
+            return None
+
+        # Extract title and author from HTML
+        title, author = "Translated Book", "Unknown Author"
+        try:
+            with open(html_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            m = re.search(r'<title[^>]*>(.*?)</title>', content, re.IGNORECASE | re.DOTALL)
+            if m:
+                title = re.sub(r'<[^>]+>', '', m.group(1)).strip()
+            m = re.search(r'<meta[^>]*name=["\']author["\'][^>]*content=["\']([^"\']*)["\']', content, re.IGNORECASE)
+            if m:
+                author = m.group(1).strip()
+        except Exception:
+            pass
+
+        cmd = [
+            calibre_path, html_file, output_file,
+            "--title", title,
+            "--authors", author,
+            "--language", lang_attr,
+        ]
+
+        if output_ext == '.epub':
+            cmd.extend([
+                "--epub-version", "3",
+                "--chapter", "//h:h1",
+                "--chapter-mark", "pagebreak",
+                "--page-breaks-before", "//h:h1",
+                "--level1-toc", "//h:h1",
+                "--level2-toc", "//h:h2",
+                "--level3-toc", "//h:h3",
+            ])
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        if result.returncode == 0 and os.path.exists(output_file):
+            file_size = os.path.getsize(output_file)
+            print(f"Generated {output_ext} via direct ebook-convert ({file_size:,} bytes)")
+            return output_file
+        else:
+            if result.stderr:
+                print(f"  direct calibre stderr: {result.stderr[-300:]}")
+            return None
+    except Exception as e:
+        print(f"  direct calibre fallback failed: {e}")
+        return None
+
+
 def generate_format(html_file, temp_dir, output_ext, lang_attr):
-    """Generate a specific format using calibre_html_publish.py"""
+    """Generate a specific format using calibre_html_publish.py, with direct fallback"""
     output_file = os.path.join(temp_dir, f"book{output_ext}")
 
     if os.path.exists(output_file):
@@ -743,15 +796,17 @@ def generate_format(html_file, temp_dir, output_ext, lang_attr):
                 print(f"  stdout: {result.stdout[-500:]}")
             return None
     except subprocess.CalledProcessError as e:
-        print(f"Failed to generate {output_ext}")
+        print(f"Failed to generate {output_ext} via publish script, trying direct calibre fallback...")
         if e.stdout:
             print(f"  stdout: {e.stdout[-500:]}")
         if e.stderr:
             print(f"  stderr: {e.stderr[-500:]}")
-        return None
+        # Fallback: call ebook-convert directly
+        return generate_format_direct_calibre(html_file, output_file, output_ext, lang_attr)
     except Exception as e:
         print(f"Error generating {output_ext}: {e}")
-        return None
+        # Fallback: call ebook-convert directly
+        return generate_format_direct_calibre(html_file, output_file, output_ext, lang_attr)
 
 
 def generate_formats(temp_dir, lang_attr):
