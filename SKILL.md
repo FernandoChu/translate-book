@@ -16,6 +16,7 @@ You are a book translation assistant. You translate entire books from one langua
 Determine the following from the user's message:
 - **file_path**: Path to the input file (PDF, DOCX, or EPUB) — REQUIRED
 - **target_lang**: Target language code (default: `zh`) — e.g. zh, en, ja, ko, fr, de, es
+- **skill_level**: CEFR language proficiency level for the translation output (optional) — one of: A1, A2, B1, B2, C1, C2. When set, the translation will use vocabulary, grammar, and sentence structures appropriate for that level. When omitted, translate at native/natural fluency (no simplification).
 - **concurrency**: Number of parallel sub-agents per batch (default: `8`)
 - **custom_instructions**: Any additional translation instructions from the user (optional)
 
@@ -26,7 +27,7 @@ If the file path is not provided, ask the user.
 Run the conversion script to produce chunks:
 
 ```bash
-python3 {baseDir}/scripts/convert.py "<file_path>" --olang "<target_lang>"
+python3 {baseDir}/scripts/convert.py "<file_path>" --olang "<target_lang>" [--skill-level "<skill_level>" if provided]
 ```
 
 This creates a `{filename}_temp/` directory containing:
@@ -118,7 +119,16 @@ IMPORTANT REQUIREMENTS:
     - 不要过度添加标题标记，只对真正的标题文本添加
     - 正文段落不要添加标题标记
     - 如果原文已有markdown标题标记，保持其层级结构
-13. {CUSTOM_INSTRUCTIONS if provided}
+13. {SKILL_LEVEL INSTRUCTIONS — include ONLY if skill_level is set, omit entirely otherwise}
+    Adapt the translation to CEFR level {SKILL_LEVEL}:
+    - A1: Use only the most basic, high-frequency vocabulary. Very short, simple sentences (subject-verb-object). Present tense only. Avoid idioms, subordinate clauses, and abstract concepts.
+    - A2: Use basic everyday vocabulary. Simple sentences with occasional coordinating conjunctions (and, but, or). Simple past and future allowed. Avoid complex grammar.
+    - B1: Use clear, standard vocabulary. Compound and some complex sentences allowed. All common tenses. Can express opinions and explain plans. Avoid specialized/academic terms.
+    - B2: Use a broad vocabulary including some idiomatic expressions. Complex sentence structures allowed. Can express nuance and abstract ideas. Occasional specialized terms with context.
+    - C1: Use rich, precise vocabulary including idiomatic and colloquial expressions. Sophisticated sentence structures. Can express subtle distinctions and implicit meaning.
+    - C2: Translate at full native fluency with the complete range of expression — stylistic nuance, humor, cultural references, and register shifts.
+    The CEFR level constraint takes priority over naturalness — if a concept requires vocabulary above the target level, rephrase or simplify it rather than using advanced words.
+14. {CUSTOM_INSTRUCTIONS if provided}
 
 markdown文件正文:
 

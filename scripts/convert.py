@@ -509,7 +509,7 @@ def _find_existing_chunk_files(temp_dir):
     return [], False
 
 
-def create_config_file(temp_dir, input_file, input_lang, output_lang, metadata=None):
+def create_config_file(temp_dir, input_file, input_lang, output_lang, metadata=None, skill_level=None):
     """Create config.txt file for the pipeline"""
     try:
         config_file = os.path.join(temp_dir, "config.txt")
@@ -520,6 +520,8 @@ input_lang={input_lang}
 output_lang={output_lang}
 conversion_method=calibre_htmlz
 """
+        if skill_level:
+            config_content += f"skill_level={skill_level}\n"
         if metadata:
             config_content += f"\n# Book Metadata\n"
             if 'title' in metadata:
@@ -564,6 +566,8 @@ def main():
     parser.add_argument("-l", "--ilang", default="auto", help="Input language (default: auto)")
     parser.add_argument("--olang", default="zh", help="Output language (default: zh)")
     parser.add_argument("--chunk-size", type=int, default=6000, help="Target chunk size in characters (default: 6000)")
+    parser.add_argument("--skill-level", default=None, choices=["A1", "A2", "B1", "B2", "C1", "C2"],
+                        help="CEFR proficiency level for translation output (e.g. A2, B1)")
 
     args = parser.parse_args()
     input_file = args.input_file
@@ -627,7 +631,7 @@ def main():
             if chunk_count == 0:
                 sys.exit(1)
 
-            create_config_file(temp_dir, input_file, args.ilang, args.olang, metadata)
+            create_config_file(temp_dir, input_file, args.ilang, args.olang, metadata, args.skill_level)
             print("Conversion completed successfully!")
             print(f"Temp directory: {temp_dir}")
             return
@@ -659,7 +663,7 @@ def main():
             if chunk_count == 0:
                 sys.exit(1)
 
-            create_config_file(temp_dir, input_file, args.ilang, args.olang, metadata)
+            create_config_file(temp_dir, input_file, args.ilang, args.olang, metadata, args.skill_level)
 
             print("Conversion completed successfully!")
             print(f"Temp directory: {temp_dir}")
