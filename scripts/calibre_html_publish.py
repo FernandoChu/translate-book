@@ -245,7 +245,12 @@ def convert_html_with_calibre(html_file, output_file, format_type, timeout=600, 
         ])
     elif format_type == 'epub':
         cmd.extend([
-            "--epub-version", "3"
+            "--epub-version", "3",
+            "--chapter", "//h:h1 | //h:h2",
+            "--chapter-mark", "pagebreak",
+            "--level1-toc", "//h:h1",
+            "--level2-toc", "//h:h2",
+            "--level3-toc", "//h:h3",
         ])
     elif format_type == 'pdf':
         pdf_font = _get_pdf_font_for_lang(lang)
