@@ -1,3 +1,9 @@
+## TLDR
+
+1. Tell claude `install the skill from https://github.com/FernandoChu/translate-book`.
+2. Tell claude `/translate-book translate /birds.epub to Dutch with A2 level difficulty`.
+3. Note that the TOC generation sometimes fails. Re-prompt Claude to fix it if this happens.
+
 # Rainman Translate Book
 
 English | [中文](README.zh-CN.md)
